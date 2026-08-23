@@ -288,7 +288,7 @@
       gap: 6px;
     }
 
-    /* Desktop Inbuilt Modal Player */
+    /* Modal Player Container */
     .modal {
       display: none;
       position: fixed;
@@ -359,7 +359,7 @@
       color: var(--text-main);
     }
 
-    /* Desktop Viewport for 16:9 frame */
+    /* 16:9 Frame Wrapper */
     .player-frame-wrapper {
       position: relative;
       width: 100%;
@@ -416,7 +416,7 @@
       }
     }
 
-    /* Mobile Portrait Optimizations (< 640px) */
+    /* Mobile Dimension & Layout Rules */
     @media (max-width: 640px) {
       .container {
         padding: 0 14px;
@@ -456,20 +456,16 @@
         gap: 16px;
       }
 
-      /* Mobile Portrait Player Structure */
+      /* Mobile Modal: Sized directly to the 16:9 video frame */
       .modal {
-        padding: calc(10px + env(safe-area-inset-top, 0px)) 10px calc(10px + env(safe-area-inset-bottom, 0px));
-        align-items: center;
-        justify-content: center;
+        padding: 14px;
       }
 
       .modal-content {
         width: 100%;
-        max-width: 440px;
-        height: 80vh;
-        height: 80dvh;
-        border-radius: 16px;
-        box-shadow: 0 12px 32px rgba(0,0,0,0.8);
+        max-width: 100%;
+        height: auto;
+        border-radius: 14px;
       }
 
       .modal-header {
@@ -477,18 +473,13 @@
       }
 
       .modal-header h3 {
-        font-size: 0.95rem;
+        font-size: 0.92rem;
       }
 
       .player-frame-wrapper {
-        flex: 1;
         width: 100%;
-        height: 100%;
-        aspect-ratio: unset;
-        min-height: 0;
-        background: #000;
-        transform: translate3d(0, 0, 0);
-        -webkit-transform: translate3d(0, 0, 0);
+        aspect-ratio: 16 / 9;
+        height: auto;
       }
     }
   </style>
@@ -693,7 +684,7 @@
 
     function closePlayer() {
       const iframe = document.getElementById("videoIframe");
-      iframe.src = ""; // Stop video playback and teardown memory
+      iframe.src = "";
       document.getElementById("playerModal").classList.remove("active");
       document.body.style.overflow = "";
       document.body.style.touchAction = "";
