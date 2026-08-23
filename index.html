@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Outreach videos access</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,11 +49,13 @@
       background-color: var(--bg);
       color: var(--text-main);
       min-height: 100vh;
+      min-height: 100dvh;
       padding-bottom: 50px;
       transition: background-color 0.2s ease, color 0.2s ease;
+      overflow-x: hidden;
     }
 
-    /* Wide Desktop View */
+    /* Widescreen Desktop Container */
     .container {
       width: 100%;
       max-width: 1440px;
@@ -61,7 +63,7 @@
       padding: 0 24px;
     }
 
-    /* Top Bar with Light/Dark Switch */
+    /* Top Navigation */
     .top-nav {
       display: flex;
       justify-content: flex-end;
@@ -83,13 +85,14 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
+    /* Header */
     header {
       padding: 10px 0 28px;
       text-align: center;
     }
 
     header h1 {
-      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-size: clamp(1.7rem, 4vw, 2.6rem);
       font-weight: 700;
       letter-spacing: -0.5px;
       background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
@@ -100,10 +103,11 @@
 
     header p {
       color: var(--text-muted);
-      font-size: clamp(0.9rem, 2vw, 1rem);
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      padding: 0 10px;
     }
 
-    /* Controls Toolbar */
+    /* Desktop Toolbar */
     .toolbar {
       display: flex;
       gap: 14px;
@@ -127,7 +131,7 @@
       border-radius: 10px;
       padding: 12px 16px 12px 42px;
       color: var(--text-main);
-      font-size: 16px; /* Disables mobile Safari zoom */
+      font-size: 16px; /* Prevents auto-zoom on iOS */
       outline: none;
     }
 
@@ -141,6 +145,7 @@
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-muted);
+      pointer-events: none;
     }
 
     .controls {
@@ -164,7 +169,7 @@
       border-color: var(--accent);
     }
 
-    /* Grid Layout */
+    /* Video Cards Grid (Desktop Widescreen) */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -186,6 +191,10 @@
       transform: translateY(-4px);
       background: var(--card-hover);
       box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+    }
+
+    .video-card:active {
+      transform: scale(0.98);
     }
 
     .thumbnail-container {
@@ -279,7 +288,7 @@
       gap: 6px;
     }
 
-    /* Inbuilt Modal Player */
+    /* Modal Player */
     .modal {
       display: none;
       position: fixed;
@@ -329,9 +338,10 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 1.6rem;
+      font-size: 1.8rem;
       cursor: pointer;
       line-height: 1;
+      padding: 0 4px;
     }
 
     .close-btn:hover {
@@ -351,7 +361,7 @@
       border: none;
     }
 
-    /* States */
+    /* Loading Spinner */
     .state-message {
       text-align: center;
       padding: 80px 20px;
@@ -375,29 +385,73 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Mobile Adaptations */
-    @media (max-width: 768px) {
+    /* Tablet Optimizations (641px to 1024px) */
+    @media (min-width: 641px) and (max-width: 1024px) {
       .container {
-        padding: 0 16px;
+        padding: 0 20px;
       }
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+      }
+    }
+
+    /* Mobile Portrait Optimizations (< 640px) */
+    @media (max-width: 640px) {
+      .container {
+        padding: 0 14px;
+      }
+
+      header {
+        padding: 6px 0 20px;
+      }
+
+      header h1 {
+        font-size: 1.65rem;
+      }
+
       .toolbar {
         flex-direction: column;
+        padding: 10px;
         gap: 10px;
+        margin-bottom: 20px;
       }
+
       .controls {
         width: 100%;
         display: grid;
         grid-template-columns: 1fr 1fr;
+        gap: 8px;
       }
+
       select {
         min-width: unset;
         width: 100%;
+        padding: 10px 8px;
+        font-size: 0.82rem;
       }
+
       .grid {
         grid-template-columns: 1fr;
+        gap: 16px;
       }
+
       .modal {
         padding: 8px;
+      }
+
+      .modal-content {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 12px;
+      }
+
+      .modal-header {
+        padding: 12px 14px;
+      }
+
+      .modal-header h3 {
+        font-size: 0.95rem;
       }
     }
   </style>
@@ -405,7 +459,7 @@
 <body>
 
   <div class="container top-nav">
-    <button class="theme-btn" id="themeToggle">
+    <button class="theme-btn" id="themeToggle" aria-label="Toggle Dark/Light Mode">
       <span id="themeIcon">☀️</span>
       <span id="themeLabel">Light Mode</span>
     </button>
@@ -447,11 +501,12 @@
     </div>
   </main>
 
+  <!-- Inbuilt Video Player Modal -->
   <div id="playerModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="modalVideoTitle">Playing Video</h3>
-        <button class="close-btn" id="closeModal">&times;</button>
+        <button class="close-btn" id="closeModal" aria-label="Close player">&times;</button>
       </div>
       <div class="player-frame-wrapper">
         <iframe id="videoIframe" src="" allow="autoplay; fullscreen" allowfullscreen></iframe>
@@ -460,12 +515,11 @@
   </div>
 
   <script>
-    // Updated endpoint matching Version 4 deployment
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpMkpNTQSBW6dx6DuB8Qpi03EesJFuGoY5-KFJnI-LBkBd3P1pV3VkOLdGkkRlm9ie/exec";
 
     let allVideos = [];
 
-    // Theme Switcher
+    // Theme Management
     const htmlEl = document.documentElement;
     const themeBtn = document.getElementById("themeToggle");
     const themeIcon = document.getElementById("themeIcon");
@@ -491,11 +545,20 @@
       applyTheme(current === "dark" ? "light" : "dark");
     });
 
+    // Dynamic Device / Dimension Detector
+    function handleDimensionUpdates() {
+      const isMobile = window.innerWidth <= 640;
+      const isTablet = window.innerWidth > 640 && window.innerWidth <= 1024;
+      document.body.dataset.device = isMobile ? "mobile" : (isTablet ? "tablet" : "desktop");
+    }
+    window.addEventListener("resize", handleDimensionUpdates);
+    handleDimensionUpdates();
+
     // Fetch and Process Videos
     async function loadVideos() {
       const grid = document.getElementById("videoGrid");
       try {
-        const res = await fetch(APPS_SCRIPT_URL);
+        const res = await fetch(APPS_SCRIPT_URL, { redirect: "follow" });
         const json = await res.json();
 
         if (json.status === "success" && json.data.length > 0) {
@@ -511,8 +574,8 @@
           grid.innerHTML = `<div class="state-message">No video files found in the specified Drive folder.</div>`;
         }
       } catch (err) {
-        console.error(err);
-        grid.innerHTML = `<div class="state-message">Failed to load videos. Please check connection.</div>`;
+        console.error("API error:", err);
+        grid.innerHTML = `<div class="state-message">Failed to load videos. Please check your network connection.</div>`;
       }
     }
 
@@ -537,7 +600,7 @@
       const selectedEvent = document.getElementById("eventFilter").value;
       const sortBy = document.getElementById("sortBy").value;
 
-      // Filter by Search Query & Selected Event Folder
+      // Filter
       let filtered = videos.filter(v => {
         const matchesQuery = v.name.toLowerCase().includes(query) || (v.event && v.event.toLowerCase().includes(query));
         const matchesEvent = selectedEvent === "ALL" || v.event === selectedEvent;
@@ -561,7 +624,7 @@
       grid.innerHTML = filtered.map(item => `
         <div class="video-card" onclick="openPlayer('${item.previewUrl}', '${escapeHtml(item.name)}')">
           <div class="thumbnail-container">
-            <img src="${item.thumbnail}" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/640x360/131b2e/94a3b8?text=Outreach+Video'" />
+            <img src="${item.thumbnail}" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/640x360/131b2e/94a3b8?text=Outreach+Video'" loading="lazy" />
             <div class="play-badge">▶</div>
           </div>
           <div class="card-body">
@@ -583,7 +646,7 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
-    // Modal Handlers
+    // Modal Player Controls
     function openPlayer(previewUrl, title) {
       document.getElementById("modalVideoTitle").textContent = title;
       document.getElementById("videoIframe").src = previewUrl;
