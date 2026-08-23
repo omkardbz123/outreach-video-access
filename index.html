@@ -290,23 +290,28 @@
       gap: 6px;
     }
 
-    /* Modal Player Container */
+    /* Modal Player Container (Uses visibility/opacity to fix 0-dimension bugs) */
     .modal {
-      display: none;
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.88);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 9999;
+      display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
-      touch-action: none;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
     }
 
     .modal.active {
-      display: flex;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
 
     .modal-content {
@@ -319,8 +324,13 @@
       display: flex;
       flex-direction: column;
       box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-      transform: translateZ(0);
+      transform: scale(0.96);
+      transition: transform 0.2s ease;
       margin: auto;
+    }
+
+    .modal.active .modal-content {
+      transform: scale(1);
     }
 
     .modal-header {
@@ -389,9 +399,14 @@
     .player-frame-wrapper {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9;
       background: #000;
       overflow: hidden;
+    }
+
+    @media (min-width: 641px) {
+      .player-frame-wrapper {
+        aspect-ratio: 16 / 9;
+      }
     }
 
     .player-frame-wrapper iframe {
@@ -498,11 +513,10 @@
         font-size: 0.9rem;
       }
 
-      /* Fixed 16:9 ratio ensures Drive renders native, unclipped mobile controls */
+      /* Optimal height prevents Google Drive mobile controls from crashing and overlapping */
       .player-frame-wrapper {
-        width: 100%;
-        aspect-ratio: 16 / 9;
-        height: auto;
+        height: clamp(240px, 58vw, 300px);
+        aspect-ratio: unset;
       }
     }
   </style>
@@ -558,9 +572,7 @@
       <div class="modal-header">
         <h3 id="modalVideoTitle">Playing Video</h3>
         <div class="modal-actions">
-          <!-- Open Original Drive Link Button -->
           <a id="driveDirectBtn" class="drive-link-btn" href="#" target="_blank" rel="noopener noreferrer" title="Open in Google Drive">↗</a>
-          <!-- Close Modal -->
           <button class="close-btn" id="closeModal" aria-label="Close player">&times;</button>
         </div>
       </div>
@@ -697,12 +709,16 @@
       document.getElementById("modalVideoTitle").textContent = title;
       document.getElementById("driveDirectBtn").href = `https://drive.google.com/file/d/${id}/view?usp=sharing`;
       
+      const modal = document.getElementById("playerModal");
       const iframe = document.getElementById("videoIframe");
-      iframe.src = previewUrl;
       
-      document.getElementById("playerModal").classList.add("active");
+      modal.classList.add("active");
       document.body.style.overflow = "hidden";
-      document.body.style.touchAction = "none";
+      
+      // Delay iframe src setting slightly so mobile layout calculates dimensions properly
+      setTimeout(() => {
+        iframe.src = previewUrl;
+      }, 50);
     }
 
     function closePlayer() {
@@ -710,7 +726,6 @@
       iframe.src = "";
       document.getElementById("playerModal").classList.remove("active");
       document.body.style.overflow = "";
-      document.body.style.touchAction = "";
     }
 
     document.getElementById("closeModal").addEventListener("click", closePlayer);
