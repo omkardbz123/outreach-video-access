@@ -359,7 +359,7 @@
       color: var(--text-main);
     }
 
-    /* 16:9 Frame Wrapper */
+    /* Desktop Viewport for 16:9 frame */
     .player-frame-wrapper {
       position: relative;
       width: 100%;
@@ -416,7 +416,7 @@
       }
     }
 
-    /* Mobile Dimension & Layout Rules */
+    /* Mobile Dimension & Player Optimization Rules */
     @media (max-width: 640px) {
       .container {
         padding: 0 14px;
@@ -456,30 +456,41 @@
         gap: 16px;
       }
 
-      /* Mobile Modal: Sized directly to the 16:9 video frame */
+      /* Mobile Modal: Sized to 50vh so Drive UI renders normal controls without overlapping */
       .modal {
-        padding: 14px;
+        padding: 12px;
+        align-items: center;
       }
 
       .modal-content {
         width: 100%;
-        max-width: 100%;
-        height: auto;
-        border-radius: 14px;
+        max-width: 440px;
+        border-radius: 16px;
       }
 
       .modal-header {
-        padding: 10px 14px;
+        padding: 12px 14px;
       }
 
       .modal-header h3 {
-        font-size: 0.92rem;
+        font-size: 0.95rem;
       }
 
       .player-frame-wrapper {
         width: 100%;
-        aspect-ratio: 16 / 9;
-        height: auto;
+        height: 50vh;
+        min-height: 290px;
+        max-height: 400px;
+        aspect-ratio: unset;
+        background: #000;
+      }
+
+      .player-frame-wrapper iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
       }
     }
   </style>
@@ -543,7 +554,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzBprexudyoQwYU1yE5ixDu6eI8hbdsJpHnA_X3tn29UOZOeGUqp3YlqmpcmITbqRPr/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAV_UoBtMY-unguTK-P5NaSAgb7T-ePQL2a3Jm_s51tr281NAcm8CtosXsbEWAtUiL/exec";
 
     let allVideos = [];
 
