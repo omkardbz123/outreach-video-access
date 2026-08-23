@@ -169,7 +169,7 @@
       border-color: var(--accent);
     }
 
-    /* Video Cards Grid (Desktop Widescreen) */
+    /* Video Cards Grid */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -294,11 +294,13 @@
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.88);
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       z-index: 9999;
       align-items: center;
       justify-content: center;
       padding: 16px;
+      touch-action: none;
     }
 
     .modal.active {
@@ -315,6 +317,7 @@
       display: flex;
       flex-direction: column;
       box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      transform: translateZ(0);
     }
 
     .modal-header {
@@ -324,6 +327,8 @@
       align-items: center;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      background: var(--modal-bg);
+      z-index: 2;
     }
 
     .modal-header h3 {
@@ -342,24 +347,37 @@
       font-size: 1.8rem;
       cursor: pointer;
       line-height: 1;
-      padding: 0 4px;
+      padding: 4px 8px;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .close-btn:hover {
       color: var(--text-main);
     }
 
+    /* Desktop Viewport for 16:9 frame */
     .player-frame-wrapper {
       position: relative;
       width: 100%;
       aspect-ratio: 16 / 9;
       background: #000;
+      overflow: hidden;
+      transform: translateZ(0);
+      -webkit-overflow-scrolling: touch;
     }
 
     .player-frame-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       border: none;
+      outline: none;
       display: block;
     }
 
@@ -387,7 +405,7 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Tablet Optimizations (641px to 1024px) */
+    /* Tablet Optimizations */
     @media (min-width: 641px) and (max-width: 1024px) {
       .container {
         padding: 0 20px;
@@ -398,7 +416,7 @@
       }
     }
 
-    /* Mobile Portrait Dimension Optimizations (< 640px) */
+    /* Mobile Portrait Optimizations (< 640px) */
     @media (max-width: 640px) {
       .container {
         padding: 0 14px;
@@ -438,22 +456,24 @@
         gap: 16px;
       }
 
-      /* Mobile Portrait Ratio Player: Tall 85vh Container */
+      /* Mobile Portrait Player Structure */
       .modal {
-        padding: 10px 8px;
+        padding: calc(10px + env(safe-area-inset-top, 0px)) 10px calc(10px + env(safe-area-inset-bottom, 0px));
         align-items: center;
+        justify-content: center;
       }
 
       .modal-content {
         width: 100%;
-        max-width: 480px;
-        height: 85vh;
-        max-height: 85dvh;
+        max-width: 440px;
+        height: 80vh;
+        height: 80dvh;
         border-radius: 16px;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.8);
       }
 
       .modal-header {
-        padding: 12px 14px;
+        padding: 10px 14px;
       }
 
       .modal-header h3 {
@@ -462,9 +482,13 @@
 
       .player-frame-wrapper {
         flex: 1;
+        width: 100%;
         height: 100%;
-        aspect-ratio: unset; /* Replaces rigid 16:9 with full mobile portrait expansion */
+        aspect-ratio: unset;
         min-height: 0;
+        background: #000;
+        transform: translate3d(0, 0, 0);
+        -webkit-transform: translate3d(0, 0, 0);
       }
     }
   </style>
@@ -522,7 +546,7 @@
         <button class="close-btn" id="closeModal" aria-label="Close player">&times;</button>
       </div>
       <div class="player-frame-wrapper">
-        <iframe id="videoIframe" src="" allow="autoplay; fullscreen" allowfullscreen></iframe>
+        <iframe id="videoIframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen loading="eager"></iframe>
       </div>
     </div>
   </div>
@@ -558,13 +582,13 @@
       applyTheme(current === "dark" ? "light" : "dark");
     });
 
-    // Dimension and Orientation Detector
+    // Dimension Updates
     function handleDimensionUpdates() {
       const isMobile = window.innerWidth <= 640;
       const isTablet = window.innerWidth > 640 && window.innerWidth <= 1024;
       document.body.dataset.device = isMobile ? "mobile" : (isTablet ? "tablet" : "desktop");
     }
-    window.addEventListener("resize", handleDimensionUpdates);
+    window.addEventListener("resize", handleDimensionUpdates, { passive: true });
     handleDimensionUpdates();
 
     // Fetch and Process Videos
@@ -613,14 +637,12 @@
       const selectedEvent = document.getElementById("eventFilter").value;
       const sortBy = document.getElementById("sortBy").value;
 
-      // Filter
       let filtered = videos.filter(v => {
         const matchesQuery = v.name.toLowerCase().includes(query) || (v.event && v.event.toLowerCase().includes(query));
         const matchesEvent = selectedEvent === "ALL" || v.event === selectedEvent;
         return matchesQuery && matchesEvent;
       });
 
-      // Sort
       filtered.sort((a, b) => {
         if (sortBy === "newest") return new Date(b.date) - new Date(a.date);
         if (sortBy === "oldest") return new Date(a.date) - new Date(b.date);
@@ -662,15 +684,19 @@
     // Modal Player Controls
     function openPlayer(previewUrl, title) {
       document.getElementById("modalVideoTitle").textContent = title;
-      document.getElementById("videoIframe").src = previewUrl;
+      const iframe = document.getElementById("videoIframe");
+      iframe.src = previewUrl;
       document.getElementById("playerModal").classList.add("active");
       document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
     }
 
     function closePlayer() {
-      document.getElementById("videoIframe").src = "";
+      const iframe = document.getElementById("videoIframe");
+      iframe.src = ""; // Stop video playback and teardown memory
       document.getElementById("playerModal").classList.remove("active");
       document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     }
 
     document.getElementById("closeModal").addEventListener("click", closePlayer);
@@ -678,7 +704,6 @@
       if (e.target.id === "playerModal") closePlayer();
     });
 
-    // Listeners
     document.getElementById("searchInput").addEventListener("input", () => renderVideos(allVideos));
     document.getElementById("eventFilter").addEventListener("change", () => renderVideos(allVideos));
     document.getElementById("sortBy").addEventListener("change", () => renderVideos(allVideos));
