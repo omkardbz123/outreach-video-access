@@ -164,7 +164,7 @@
       border-color: var(--accent);
     }
 
-    /* Video Grid (Wide Desktop & Mobile Adaptable) */
+    /* Responsive Grid */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -279,7 +279,7 @@
       gap: 6px;
     }
 
-    /* Modal Player */
+    /* Inbuilt Modal Player */
     .modal {
       display: none;
       position: fixed;
@@ -351,7 +351,7 @@
       border: none;
     }
 
-    /* Loading Spinner */
+    /* States */
     .state-message {
       text-align: center;
       padding: 80px 20px;
@@ -419,11 +419,10 @@
   </header>
 
   <main class="container">
-    <!-- Toolbar Controls -->
     <div class="toolbar">
       <div class="search-wrapper">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search by video title or keyword..." />
+        <input type="text" id="searchInput" placeholder="Search title or folder..." />
       </div>
 
       <div class="controls">
@@ -440,7 +439,6 @@
       </div>
     </div>
 
-    <!-- Video Grid -->
     <div id="videoGrid" class="grid">
       <div class="state-message">
         <div class="spinner"></div>
@@ -449,7 +447,6 @@
     </div>
   </main>
 
-  <!-- Inbuilt Video Player Modal -->
   <div id="playerModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -464,7 +461,7 @@
 
   <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwh1m5WizywMP50Aa3ZvPy6Xj42XUiUEiB4j2d8Zape5NcwuITGSieHgAKL1s92tUDc/exec";
-
+    
     let allVideos = [];
 
     // Theme Management
@@ -504,20 +501,18 @@
           allVideos = json.data;
           
           // Populate dynamic event/folder dropdown
-          if (json.events && json.events.length > 0) {
-            populateEventFilter(json.events);
-          } else {
-            const fallbackEvents = [...new Set(allVideos.map(v => v.event))];
-            populateEventFilter(fallbackEvents);
-          }
+          const eventList = json.events && json.events.length > 0
+            ? json.events 
+            : [...new Set(allVideos.map(v => v.event))];
 
+          populateEventFilter(eventList);
           renderVideos(allVideos);
         } else {
           grid.innerHTML = `<div class="state-message">No video files found in the specified Drive folder.</div>`;
         }
       } catch (err) {
         console.error(err);
-        grid.innerHTML = `<div class="state-message">Failed to load videos. Please check Apps Script deployment permissions.</div>`;
+        grid.innerHTML = `<div class="state-message">Failed to load videos. Please check Apps Script deployment.</div>`;
       }
     }
 
@@ -533,6 +528,7 @@
           filterSelect.appendChild(opt);
         }
       });
+      filterSelect.value = "ALL";
     }
 
     function renderVideos(videos) {
@@ -541,14 +537,14 @@
       const selectedEvent = document.getElementById("eventFilter").value;
       const sortBy = document.getElementById("sortBy").value;
 
-      // 1. Filter by Search Query & Event (Subfolder)
+      // Filter by Search Query & Event (Folder)
       let filtered = videos.filter(v => {
         const matchesQuery = v.name.toLowerCase().includes(query) || (v.event && v.event.toLowerCase().includes(query));
         const matchesEvent = selectedEvent === "ALL" || v.event === selectedEvent;
         return matchesQuery && matchesEvent;
       });
 
-      // 2. Sort
+      // Sort
       filtered.sort((a, b) => {
         if (sortBy === "newest") return new Date(b.date) - new Date(a.date);
         if (sortBy === "oldest") return new Date(a.date) - new Date(b.date);
@@ -557,7 +553,6 @@
         return 0;
       });
 
-      // 3. Render Cards
       if (filtered.length === 0) {
         grid.innerHTML = `<div class="state-message">No matching videos found.</div>`;
         return;
@@ -566,7 +561,7 @@
       grid.innerHTML = filtered.map(item => `
         <div class="video-card" onclick="openPlayer('${item.previewUrl}', '${escapeHtml(item.name)}')">
           <div class="thumbnail-container">
-            <img src="${item.thumbnail}" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/640x360/131b2e/94a3b8?text=Outreach+Video'" />
+            <img src="${item.thumbnail}" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/640x360/131b2e/94a3b8?text=Video+Stream'" />
             <div class="play-badge">▶</div>
           </div>
           <div class="card-body">
@@ -607,7 +602,7 @@
       if (e.target.id === "playerModal") closePlayer();
     });
 
-    // Event Listeners
+    // Listeners
     document.getElementById("searchInput").addEventListener("input", () => renderVideos(allVideos));
     document.getElementById("eventFilter").addEventListener("change", () => renderVideos(allVideos));
     document.getElementById("sortBy").addEventListener("change", () => renderVideos(allVideos));
