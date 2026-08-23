@@ -53,7 +53,7 @@
       transition: background-color 0.2s ease, color 0.2s ease;
     }
 
-    /* Wide Desktop Container */
+    /* Wide Desktop View */
     .container {
       width: 100%;
       max-width: 1440px;
@@ -61,11 +61,11 @@
       padding: 0 24px;
     }
 
-    /* Header & Navigation */
+    /* Top Bar with Light/Dark Switch */
     .top-nav {
       display: flex;
       justify-content: flex-end;
-      padding: 18px 0 6px;
+      padding: 16px 0 4px;
     }
 
     .theme-btn {
@@ -73,14 +73,14 @@
       border: 1px solid var(--border);
       color: var(--text-main);
       padding: 8px 16px;
-      border-radius: 24px;
+      border-radius: 20px;
       font-size: 0.85rem;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
     header {
@@ -103,7 +103,7 @@
       font-size: clamp(0.9rem, 2vw, 1rem);
     }
 
-    /* Toolbar Controls */
+    /* Controls Toolbar */
     .toolbar {
       display: flex;
       gap: 14px;
@@ -127,7 +127,7 @@
       border-radius: 10px;
       padding: 12px 16px 12px 42px;
       color: var(--text-main);
-      font-size: 16px; /* Prevents auto-zoom on iOS */
+      font-size: 16px; /* Disables mobile Safari zoom */
       outline: none;
     }
 
@@ -157,14 +157,14 @@
       font-size: 0.9rem;
       outline: none;
       cursor: pointer;
-      min-width: 160px;
+      min-width: 170px;
     }
 
     select:focus {
       border-color: var(--accent);
     }
 
-    /* Responsive Grid */
+    /* Grid Layout */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -208,15 +208,15 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 46px;
-      height: 46px;
+      width: 48px;
+      height: 48px;
       background: rgba(37, 99, 235, 0.9);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #fff;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
       transition: transform 0.2s ease;
     }
@@ -375,7 +375,7 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* Mobile Responsive Rules */
+    /* Mobile Adaptations */
     @media (max-width: 768px) {
       .container {
         padding: 0 16px;
@@ -422,7 +422,7 @@
     <div class="toolbar">
       <div class="search-wrapper">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search title or folder..." />
+        <input type="text" id="searchInput" placeholder="Search by video title..." />
       </div>
 
       <div class="controls">
@@ -460,11 +460,12 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwh1m5WizywMP50Aa3ZvPy6Xj42XUiUEiB4j2d8Zape5NcwuITGSieHgAKL1s92tUDc/exec";
-    
+    // Updated endpoint matching Version 4 deployment
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyybw4SgW0XVbIYQJp1spNC7-6AtjwLrWjQmnBzPlJh4Cz6OtUO2VOvuPor4kqMSwIn/exec";
+
     let allVideos = [];
 
-    // Theme Management
+    // Theme Switcher
     const htmlEl = document.documentElement;
     const themeBtn = document.getElementById("themeToggle");
     const themeIcon = document.getElementById("themeIcon");
@@ -490,7 +491,7 @@
       applyTheme(current === "dark" ? "light" : "dark");
     });
 
-    // Load Videos
+    // Fetch and Process Videos
     async function loadVideos() {
       const grid = document.getElementById("videoGrid");
       try {
@@ -500,8 +501,7 @@
         if (json.status === "success" && json.data.length > 0) {
           allVideos = json.data;
           
-          // Populate dynamic event/folder dropdown
-          const eventList = json.events && json.events.length > 0
+          const eventList = (json.events && json.events.length > 0) 
             ? json.events 
             : [...new Set(allVideos.map(v => v.event))];
 
@@ -512,7 +512,7 @@
         }
       } catch (err) {
         console.error(err);
-        grid.innerHTML = `<div class="state-message">Failed to load videos. Please check Apps Script deployment.</div>`;
+        grid.innerHTML = `<div class="state-message">Failed to load videos. Please check connection.</div>`;
       }
     }
 
@@ -520,7 +520,7 @@
       const filterSelect = document.getElementById("eventFilter");
       filterSelect.innerHTML = '<option value="ALL">All Events</option>';
       
-      events.forEach(evt => {
+      events.sort().forEach(evt => {
         if (evt) {
           const opt = document.createElement("option");
           opt.value = evt;
@@ -537,7 +537,7 @@
       const selectedEvent = document.getElementById("eventFilter").value;
       const sortBy = document.getElementById("sortBy").value;
 
-      // Filter by Search Query & Event (Folder)
+      // Filter by Search Query & Selected Event Folder
       let filtered = videos.filter(v => {
         const matchesQuery = v.name.toLowerCase().includes(query) || (v.event && v.event.toLowerCase().includes(query));
         const matchesEvent = selectedEvent === "ALL" || v.event === selectedEvent;
@@ -561,7 +561,7 @@
       grid.innerHTML = filtered.map(item => `
         <div class="video-card" onclick="openPlayer('${item.previewUrl}', '${escapeHtml(item.name)}')">
           <div class="thumbnail-container">
-            <img src="${item.thumbnail}" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/640x360/131b2e/94a3b8?text=Video+Stream'" />
+            <img src="${item.thumbnail}" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/640x360/131b2e/94a3b8?text=Outreach+Video'" />
             <div class="play-badge">▶</div>
           </div>
           <div class="card-body">
@@ -583,7 +583,7 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
-    // Modal Player Controls
+    // Modal Handlers
     function openPlayer(previewUrl, title) {
       document.getElementById("modalVideoTitle").textContent = title;
       document.getElementById("videoIframe").src = previewUrl;
