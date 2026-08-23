@@ -109,7 +109,7 @@
       padding: 0 10px;
     }
 
-    /* Toolbar */
+    /* Desktop Toolbar */
     .toolbar {
       display: flex;
       gap: 14px;
@@ -313,13 +313,14 @@
       background: var(--modal-bg);
       border-radius: 16px;
       width: 100%;
-      max-width: 920px;
+      max-width: 900px;
       border: 1px solid var(--border);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       box-shadow: 0 20px 40px rgba(0,0,0,0.6);
       transform: translateZ(0);
+      margin: auto;
     }
 
     .modal-header {
@@ -330,7 +331,7 @@
       border-bottom: 1px solid var(--border);
       background: var(--modal-bg);
       z-index: 2;
-      gap: 10px;
+      gap: 12px;
     }
 
     .modal-header h3 {
@@ -348,25 +349,12 @@
       gap: 8px;
     }
 
-    .speed-btn-select {
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 6px 8px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      outline: none;
-      min-width: unset;
-      cursor: pointer;
-    }
-
     .drive-link-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
       background: var(--input-bg);
       border: 1px solid var(--border);
@@ -397,8 +385,8 @@
       color: var(--text-main);
     }
 
-    /* Desktop Iframe Player Container */
-    .desktop-player-wrapper {
+    /* 16:9 Video Viewport */
+    .player-frame-wrapper {
       position: relative;
       width: 100%;
       aspect-ratio: 16 / 9;
@@ -406,32 +394,15 @@
       overflow: hidden;
     }
 
-    .desktop-player-wrapper iframe {
+    .player-frame-wrapper iframe {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       border: none;
-    }
-
-    /* Mobile Custom Video Container */
-    .mobile-player-wrapper {
-      display: none;
-      width: 100%;
-      background: #000;
-      position: relative;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .mobile-player-wrapper video {
-      width: 100%;
-      max-height: 65vh;
-      max-height: 65dvh;
-      object-fit: contain;
+      outline: none;
       display: block;
-      background: #000;
     }
 
     /* Loading Spinner */
@@ -469,7 +440,7 @@
       }
     }
 
-    /* Mobile Dimension Optimizations (< 640px) */
+    /* Mobile Dimension & Sizing Rules (< 640px) */
     @media (max-width: 640px) {
       .container {
         padding: 0 14px;
@@ -514,17 +485,24 @@
       }
 
       .modal-content {
+        width: 100%;
         max-width: 100%;
         border-radius: 14px;
       }
 
-      /* Switch Player Engines on Mobile */
-      .desktop-player-wrapper {
-        display: none !important;
+      .modal-header {
+        padding: 10px 14px;
       }
 
-      .mobile-player-wrapper {
-        display: flex !important;
+      .modal-header h3 {
+        font-size: 0.9rem;
+      }
+
+      /* Fixed 16:9 ratio ensures Drive renders native, unclipped mobile controls */
+      .player-frame-wrapper {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        height: auto;
       }
     }
   </style>
@@ -580,15 +558,6 @@
       <div class="modal-header">
         <h3 id="modalVideoTitle">Playing Video</h3>
         <div class="modal-actions">
-          <!-- Speed Controller -->
-          <select id="playbackSpeed" class="speed-btn-select" title="Playback Speed">
-            <option value="0.5">0.5x</option>
-            <option value="0.75">0.75x</option>
-            <option value="1" selected>1x</option>
-            <option value="1.25">1.25x</option>
-            <option value="1.5">1.5x</option>
-            <option value="2">2x</option>
-          </select>
           <!-- Open Original Drive Link Button -->
           <a id="driveDirectBtn" class="drive-link-btn" href="#" target="_blank" rel="noopener noreferrer" title="Open in Google Drive">↗</a>
           <!-- Close Modal -->
@@ -596,16 +565,8 @@
         </div>
       </div>
 
-      <!-- Engine 1: Desktop Iframe Viewport -->
-      <div id="desktopWrapper" class="desktop-player-wrapper">
+      <div class="player-frame-wrapper">
         <iframe id="videoIframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
-      </div>
-
-      <!-- Engine 2: Mobile Custom HTML5 Player -->
-      <div id="mobileWrapper" class="mobile-player-wrapper">
-        <video id="customVideo" controls playsinline webkit-playsinline preload="metadata">
-          Your browser does not support HTML5 video streaming.
-        </video>
       </div>
     </div>
   </div>
@@ -640,15 +601,6 @@
       const current = htmlEl.getAttribute("data-theme");
       applyTheme(current === "dark" ? "light" : "dark");
     });
-
-    // Dimension Updates
-    function handleDimensionUpdates() {
-      const isMobile = window.innerWidth <= 640;
-      const isTablet = window.innerWidth > 640 && window.innerWidth <= 1024;
-      document.body.dataset.device = isMobile ? "mobile" : (isTablet ? "tablet" : "desktop");
-    }
-    window.addEventListener("resize", handleDimensionUpdates, { passive: true });
-    handleDimensionUpdates();
 
     // Fetch and Process Videos
     async function loadVideos() {
@@ -741,56 +693,25 @@
     }
 
     // Modal Player Controls
-    const speedSelector = document.getElementById("playbackSpeed");
-    const customVideo = document.getElementById("customVideo");
-    const videoIframe = document.getElementById("videoIframe");
-
     function openPlayer(id, previewUrl, title) {
       document.getElementById("modalVideoTitle").textContent = title;
-      
-      // Update the external Drive link arrow (↗)
       document.getElementById("driveDirectBtn").href = `https://drive.google.com/file/d/${id}/view?usp=sharing`;
       
-      // Reset speed to 1x
-      speedSelector.value = "1";
-      customVideo.playbackRate = 1;
-
-      const isMobile = window.innerWidth <= 640;
-
-      if (isMobile) {
-        // Stop desktop iframe
-        videoIframe.src = "";
-        // Stream direct Drive source on mobile HTML5 player
-        customVideo.src = `https://drive.google.com/uc?export=download&id=${id}`;
-        customVideo.load();
-      } else {
-        // Stop mobile player
-        customVideo.pause();
-        customVideo.src = "";
-        // Load desktop preview iframe
-        videoIframe.src = previewUrl;
-      }
-
+      const iframe = document.getElementById("videoIframe");
+      iframe.src = previewUrl;
+      
       document.getElementById("playerModal").classList.add("active");
       document.body.style.overflow = "hidden";
       document.body.style.touchAction = "none";
     }
 
     function closePlayer() {
-      // Teardown both players on close
-      videoIframe.src = "";
-      customVideo.pause();
-      customVideo.src = "";
-      
+      const iframe = document.getElementById("videoIframe");
+      iframe.src = "";
       document.getElementById("playerModal").classList.remove("active");
       document.body.style.overflow = "";
       document.body.style.touchAction = "";
     }
-
-    // Playback Speed Controller Listener
-    speedSelector.addEventListener("change", (e) => {
-      customVideo.playbackRate = parseFloat(e.target.value);
-    });
 
     document.getElementById("closeModal").addEventListener("click", closePlayer);
     document.getElementById("playerModal").addEventListener("click", (e) => {
